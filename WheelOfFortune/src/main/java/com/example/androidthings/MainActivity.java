@@ -4,17 +4,24 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.HandlerThread;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import com.google.android.things.contrib.driver.apa102.Apa102;
+import com.google.android.things.contrib.driver.bmx280.Bmx280;
+import com.google.android.things.contrib.driver.button.ButtonInputDriver;
+import com.google.android.things.contrib.driver.ht16k33.AlphanumericDisplay;
+import com.google.android.things.contrib.driver.ht16k33.Ht16k33;
 import com.google.android.things.contrib.driver.pwmspeaker.Speaker;
 import java.io.IOException;
 import java.util.Random;
 import static com.example.androidthings.MusicNotes.TUNE;
+import com.google.android.things.contrib.driver.rainbowhat.RainbowHat;
+import com.google.android.things.pio.Gpio;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity  {
 
     private static final int LED_BRIGHTNESS = 1; // 0 ... 31
     private static final Apa102.Mode LED_MODE = Apa102.Mode.BGR;
@@ -25,7 +32,8 @@ public class MainActivity extends Activity {
     double spinSpeed = 0;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)  {
+
 
         setContentView(R.layout.main_activity);
         super.onCreate(savedInstanceState);
@@ -48,12 +56,19 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 spinValue = findViewById(R.id.seekBar);
                 int spinForce = 300 - (spinValue.getProgress());
-                play(spinForce);
+                try {
+                    play(spinForce);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
-    public void play(int spinForce){
+
+    public void play(int spinForce) throws IOException{
+
+
         int[] colors = new int[] {Color.RED, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.RED, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.YELLOW, Color.YELLOW};
 
         Random random = new Random(); int rnd = random.nextInt(((10 - 1) + 1) + 1);
@@ -117,10 +132,22 @@ public class MainActivity extends Activity {
         TextView textView = findViewById(R.id.resultText);
         textView.setText(result);
 
+        //display result on segment display
+        AlphanumericDisplay segment = RainbowHat.openDisplay();
+        segment.setBrightness(Ht16k33.HT16K33_BRIGHTNESS_MAX);
+        segment.display(result);
+        segment.setEnabled(true);
+        segment.close();
+
         try {
             mSpeaker.stop();
         } catch (IOException ignored) {}
+
+
+
     }
+
+
 
     @Override
     public void onDestroy() {
